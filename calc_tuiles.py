@@ -9,10 +9,6 @@ def read_geometry(geo_file):
     f=open(geo_file, "r")
     lines=f.readlines()
     f.close()
-    #poly=[]
-    #for pt in lines[2:]:
-    #    a=pt.split("\t")
-    #    poly.append((float(a[0]),float(a[1])))
     l=1 #numéro de ligne
     polys=[]
     for i in range(int(lines[0].split(" ")[1])):#nbr de 'Regions'
