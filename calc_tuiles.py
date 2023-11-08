@@ -10,31 +10,22 @@ def read_geometry(geo_file):
     f.close()
     l=1 #numéro de ligne
     polys=[]
-    pol_and_holes=[]
     nbr_regions=int(lines[0].split(" ")[1])
     for i in range(nbr_regions):
+        is_hole=False
         pol=[]
         for pt in range(int(lines[l])): #Nombre de points indiqué dans le fichier
             l+=1
             a=lines[l].split("\t")
             pol.append((float(a[0]),float(a[1])))
         l+=1
-        # Si pol_and_holes vide alors on ajoute juste un polygone
-        if pol_and_holes == []:
-            pol_and_holes=[pol,[]]
-        # S'il ne l'est pas : deux choix : 
-        else:
-            # Soit le polygone à ajouter est un trou (i.e il intersecte le polygone précédent)
-            if Polygon(pol).intersects(Polygon(pol_and_holes[0])):
-                pol_and_holes[1].append(pol)
-                if i==nbr_regions-1:
-                    polys.append(pol_and_holes)
-            # Soit ça n'est pas le cas, dans ce cas c'est un nouveau polygone et on peut stocker le précédent
-            else:
-                polys.append(pol_and_holes)
-                pol_and_holes=[pol, []]
-                if i==nbr_regions-1:
-                    polys.append(pol_and_holes)
+        # Le trou peut être dans n'importe quel polygone. On parcours toute la liste pour chercher si on intersecte
+        for p in polys:
+            if Polygon(pol).intersects(Polygon(p[0])):
+                p[1].append(pol)
+                is_hole=True
+        if not is_hole:
+            polys.append([pol, []])
     return MultiPolygon(polys)
 
 def grid_bounds(geom, delta, resolution):
