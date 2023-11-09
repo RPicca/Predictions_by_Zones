@@ -45,19 +45,36 @@ def grid_bounds(geom, delta, resolution):
             grid.append( poly_ij )
     return grid
 
-def partition(geom, delta, resolution):
+def partition(geom, delta, resolution, all_tiles=False):
     prepared_geom = prep(geom)
-    grid = list(filter(prepared_geom.intersects, grid_bounds(geom, delta, resolution)))
+    if not all_tiles:
+        grid = list(filter(prepared_geom.intersects, grid_bounds(geom, delta, resolution)))
+    else:
+        grid=grid_bounds(geom, delta, resolution)
     return grid
+def tiles_geo(grid, file_name):
+    f=open(file_name, "w")
+    nbr_tiles=len(grid)
+    f.write("REGION "+str(nbr_tiles)+"\n")
+    for g in range(len(grid)):
+        f.write("5\n")
+        for coord in range(5):
+            f.write(str(grid[g].exterior.coords.xy[0][coord])+"\t"+str(grid[g].exterior.coords.xy[1][coord])+"\n")
+    f.close()
 
 
 resolution=50
-tile_size=1000
+tile_size=10000
 polys=read_geometry(".\\geo.txt").geoms
+all_tiles=True
+cnt=0
 for poly in polys:
     geom = poly
-    grid = partition(geom, tile_size, resolution)
+    grid = partition(geom, tile_size, resolution, all_tiles)
+    print("nombre de tuiles : ", len(grid))
+    tiles_geo(grid, ".\\tiles"+str(cnt)+".txt")
     fig, ax = plt.subplots(figsize=(15, 15))
     gpd.GeoSeries(grid).boundary.plot(ax=ax)
     gpd.GeoSeries([geom]).boundary.plot(ax=ax,color="red")
+    cnt+=1
 plt.show()
