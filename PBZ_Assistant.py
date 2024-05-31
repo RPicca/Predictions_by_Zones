@@ -1,5 +1,6 @@
 import win32com.client
 import os
+import subprocess
 
 def Get_Selection():
     doc=Atoll.ActiveDocument
@@ -9,13 +10,19 @@ def AtollMacro_Prediction_Info():
     elmt=win32com.client.dynamic.Dispatch(Get_Selection())
     print(elmt.Name)
     print("Par émétteur : " + str(elmt.ISPERTRANSMITTER))
+    print("Path : " + str(elmt.URL))
+
+def AtollMacro_Open_Prediction_Folder():
+    path=Get_Selection().URL
+    subprocess.Popen(r'explorer '+path)
+
 
 #Lancement depuis une prédiction
 def AtollMacro_Set_Computation_to_prediction_zone():
     doc=Atoll.ActiveDocument
     pred=win32com.client.dynamic.Dispatch(Get_Selection())
     X_pred = pred.USERDATA.Get("Forsk.PredictionsByZones").Get("xcoordinates")
-    Y_pred= pred.USERDATA.Get("Forsk.PredictionsByZones").Get("ycoordinates")
+    Y_pred = pred.USERDATA.Get("Forsk.PredictionsByZones").Get("ycoordinates")
     #On assemble les coord X avec les Y
     Pts=[]
     #Pour gérer les cas où il y a plusieurs poly
@@ -94,14 +101,15 @@ def AtollMacro_Report():
     #On boucle sur tous les dossiers du run sélectionné et on génère un report dessus
     folder = Get_Selection()
     for f in folder._NewEnum():
-        file_name=f.Name.replace("/", "_").replace(":", "-")+".txt"
+        file_name=f.Name.replace("/", "_").replace(":", "-")
         file_path=os.path.join(report_path,file_name)
-        print(file_path)
         try:
-            pbz.report(f, ["Surface (km²)", "% of Covered Area", "% Focus Zone", "% Computation Zone"], "\t", file_path)
+            pbz.report(f, ["Surface (km²)", "% of Covered Area", "% Focus Zone", "% Computation Zone"], ";", file_path+".csv")
         except:
-            f = open(file_path+"_EMPTY", "w")
-            f.close()
+            # si exception, alors c'est que la commande n'est pas dispo sur le dossier (enfin normalement quoi)
+            if not f._NewEnum()[0].ISPERTRANSMITTER:
+                f = open(file_path+"_EMPTY.txt", "w")
+                f.close()
 
     
 def AtollMacro_Print_CPZ():
